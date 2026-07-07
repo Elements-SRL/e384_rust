@@ -1,6 +1,14 @@
+//! [`Board`] — a borrowed handle over `E384BoardModel`, mirroring [`crate::channel_model`]:
+//! there is no `e384_boardModel_free`, so getters/setters are plain field accessors and the
+//! handle's lifetime is tied to the owning `Device`.
+//!
+//! `BoardModel::setChannelsOnBoard` is deliberately not wrapped — the C API comment notes it
+//! would need caller-constructed owned `ChannelModel*` handles, which the borrowed-handle model
+//! here doesn't support; that wiring is internal-only, done at connect time.
+
 use std::marker::PhantomData;
 
-use crate::channel_model::{wrap_channels, Channel};
+use crate::channel_model::{Channel, wrap_channels};
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::sys::{E384BoardModel, E384Measurement};
@@ -15,40 +23,50 @@ pub struct Board<'d> {
 }
 
 impl<'d> Board<'d> {
+    /// Wraps `e384_boardModel_getId`.
     pub fn id(&self) -> u16 {
         unsafe { crate::sys::e384_boardModel_getId(self.ptr) }
     }
 
+    /// Wraps `e384_boardModel_setId`.
     pub fn set_id(&mut self, id: u16) {
         unsafe { crate::sys::e384_boardModel_setId(self.ptr, id) };
     }
 
+    /// Wraps `e384_boardModel_getGateVoltage`.
     pub fn gate_voltage(&self) -> E384Measurement {
         unsafe { crate::sys::e384_boardModel_getGateVoltage(self.ptr) }
     }
 
+    /// Wraps `e384_boardModel_setGateVoltage`.
     pub fn set_gate_voltage(&mut self, voltage: E384Measurement) {
         unsafe { crate::sys::e384_boardModel_setGateVoltage(self.ptr, voltage) };
     }
 
+    /// Wraps `e384_boardModel_getSourceVoltage`.
     pub fn source_voltage(&self) -> E384Measurement {
         unsafe { crate::sys::e384_boardModel_getSourceVoltage(self.ptr) }
     }
 
+    /// Wraps `e384_boardModel_setSourceVoltage`.
     pub fn set_source_voltage(&mut self, voltage: E384Measurement) {
         unsafe { crate::sys::e384_boardModel_setSourceVoltage(self.ptr, voltage) };
     }
 
+    /// Wraps `e384_boardModel_getChannelsOnBoard`.
     pub fn channels_on_board(&self) -> Result<Vec<Channel<'d>>, ErrorCodes> {
         let ptr = self.ptr;
         let ptrs = unsafe {
-            collect_list(|out, count| crate::sys::e384_boardModel_getChannelsOnBoard(ptr, out, count))
+            collect_list(|out, count| {
+                crate::sys::e384_boardModel_getChannelsOnBoard(ptr, out, count)
+            })
         }?;
         Ok(wrap_channels(ptrs))
     }
 }
 
 impl Device {
+    /// Wraps `e384_getBoards`.
     pub fn boards(&self) -> Result<Vec<Board<'_>>, ErrorCodes> {
         let dev = self.0;
         let ptrs =

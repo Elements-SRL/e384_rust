@@ -1,10 +1,20 @@
+//! Compensation features/values/ranges/options, the compensation value/flags matrix, and
+//! clamping modality getters/setters.
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
-use crate::sys::{E384ChannelSources, E384CompensationControl, E384Measurement, E384RangedMeasurement};
+use crate::sys::{
+    E384ChannelSources, E384CompensationControl, E384Measurement, E384RangedMeasurement,
+};
 use crate::util::{collect_list, collect_matrix, owned_string_list, translate};
 
 impl Device {
-    pub fn compensation_enables(&self, channels: &[u16], comp_type: i32) -> Result<Vec<bool>, ErrorCodes> {
+    /// Wraps `e384_getCompensationEnables`.
+    pub fn compensation_enables(
+        &self,
+        channels: &[u16],
+        comp_type: i32,
+    ) -> Result<Vec<bool>, ErrorCodes> {
         let mut out = vec![0u8; channels.len()];
         unsafe {
             translate(crate::sys::e384_getCompensationEnables(
@@ -18,6 +28,7 @@ impl Device {
         Ok(out.into_iter().map(|v| v != 0).collect())
     }
 
+    /// Wraps `e384_getCompFeatures`: ranges plus the feature's default value.
     pub fn comp_features(
         &self,
         feature: i32,
@@ -49,6 +60,7 @@ impl Device {
         Ok((buf, default_value))
     }
 
+    /// Wraps `e384_getCompOptionsFeatures`.
     pub fn comp_options_features(&self, comp_type: i32) -> Result<Vec<String>, ErrorCodes> {
         let mut list = std::ptr::null_mut();
         unsafe {
@@ -59,21 +71,28 @@ impl Device {
         Ok(unsafe { owned_string_list(list) })
     }
 
-    /// Row-major compensation value matrix.
+    /// Wraps `e384_getCompValueMatrix`. Row-major compensation value matrix.
     pub fn comp_value_matrix(&self) -> Result<(Vec<f64>, usize, usize), ErrorCodes> {
         let dev = self.0;
-        unsafe { collect_matrix(|out, rows, cols| crate::sys::e384_getCompValueMatrix(dev, out, rows, cols)) }
+        unsafe {
+            collect_matrix(|out, rows, cols| {
+                crate::sys::e384_getCompValueMatrix(dev, out, rows, cols)
+            })
+        }
     }
 
-    pub fn compensation_control(
-        &self,
-        param: i32,
-    ) -> Result<E384CompensationControl, ErrorCodes> {
+    /// Wraps `e384_getCompensationControl`.
+    pub fn compensation_control(&self, param: i32) -> Result<E384CompensationControl, ErrorCodes> {
         let mut out = E384CompensationControl::default();
-        unsafe { translate(crate::sys::e384_getCompensationControl(self.0, param, &mut out)) }?;
+        unsafe {
+            translate(crate::sys::e384_getCompensationControl(
+                self.0, param, &mut out,
+            ))
+        }?;
         Ok(out)
     }
 
+    /// Wraps `e384_enableCompensation`. `channels`/`on` must be equal length.
     pub fn enable_compensation(
         &self,
         channels: &[u16],
@@ -95,6 +114,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCompValues`. `channels`/`values` must be equal length.
     pub fn set_comp_values(
         &self,
         channels: &[u16],
@@ -115,6 +135,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCompRanges`. `channels`/`ranges` must be equal length.
     pub fn set_comp_ranges(
         &self,
         channels: &[u16],
@@ -135,6 +156,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCompOptions`. `channels`/`options` must be equal length.
     pub fn set_comp_options(
         &self,
         channels: &[u16],
@@ -155,12 +177,14 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_hasCompFeature`.
     pub fn has_comp_feature(&self, feature: i32) -> Result<bool, ErrorCodes> {
         let mut out: i32 = 0;
         unsafe { translate(crate::sys::e384_hasCompFeature(self.0, feature, &mut out)) }?;
         Ok(out != 0)
     }
 
+    /// Wraps `e384_getReadoutOffsetRecalibrationStatuses`.
     pub fn readout_offset_recalibration_statuses(
         &self,
         channels: &[u16],
@@ -177,6 +201,7 @@ impl Device {
         Ok(out)
     }
 
+    /// Wraps `e384_getLiquidJunctionStatuses`.
     pub fn liquid_junction_statuses(&self, channels: &[u16]) -> Result<Vec<i32>, ErrorCodes> {
         let mut out = vec![0i32; channels.len()];
         unsafe {
@@ -190,6 +215,7 @@ impl Device {
         Ok(out)
     }
 
+    /// Wraps `e384_getLiquidJunctionVoltages`.
     pub fn liquid_junction_voltages(
         &self,
         channels: &[u16],
@@ -206,17 +232,24 @@ impl Device {
         Ok(out)
     }
 
+    /// Wraps `e384_getClampingModalitiesFeatures`.
     pub fn clamping_modalities_features(&self) -> Result<Vec<i32>, ErrorCodes> {
         let dev = self.0;
-        unsafe { collect_list(|out, count| crate::sys::e384_getClampingModalitiesFeatures(dev, out, count)) }
+        unsafe {
+            collect_list(|out, count| {
+                crate::sys::e384_getClampingModalitiesFeatures(dev, out, count)
+            })
+        }
     }
 
+    /// Wraps `e384_getClampingModality`.
     pub fn clamping_modality(&self) -> Result<i32, ErrorCodes> {
         let mut out: i32 = 0;
         unsafe { translate(crate::sys::e384_getClampingModality(self.0, &mut out)) }?;
         Ok(out)
     }
 
+    /// Wraps `e384_setClampingModality_byIdx`.
     pub fn set_clamping_modality_by_idx(
         &self,
         idx: u32,
@@ -233,6 +266,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setClampingModality_byEnum`.
     pub fn set_clamping_modality_by_enum(
         &self,
         mode: i32,
@@ -249,6 +283,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_getAvailableChannelsSourcesFeatures`.
     pub fn available_channels_sources_features(
         &self,
     ) -> Result<(E384ChannelSources, E384ChannelSources), ErrorCodes> {
@@ -264,6 +299,7 @@ impl Device {
         Ok((voltage, current))
     }
 
+    /// Wraps `e384_getTemperatureChannelsFeatures`: ranges plus per-channel display names.
     pub fn temperature_channels_features(
         &self,
     ) -> Result<(Vec<E384RangedMeasurement>, Vec<String>), ErrorCodes> {

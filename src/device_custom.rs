@@ -1,3 +1,8 @@
+//! Custom flags/options/doubles, debug bit/word, state array, zap, SPI command, ADC core, and
+//! the misc scalar/measurement commands from the header's hand-written tail section.
+//! `e384_getCustomOptions` (ragged `vector<vector<string>>`) is deliberately not wrapped — the
+//! header itself defers it as a nested opaque-tree problem never cleanly exposed at the C boundary.
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::sys::{E384Measurement, E384PidParams, E384RangedMeasurement};
@@ -5,7 +10,8 @@ use crate::util::{owned_string_list, translate};
 
 /// `(device, int32_t value1, int32_t value2) -> E384Err`
 macro_rules! two_int_cmd {
-    ($name:ident, $sys_fn:path) => {
+    ($doc:literal, $name:ident, $sys_fn:path) => {
+        #[doc = $doc]
         pub fn $name(&self, value1: i32, value2: i32) -> Result<(), ErrorCodes> {
             unsafe { translate($sys_fn(self.0, value1, value2)) }
         }
@@ -14,7 +20,8 @@ macro_rules! two_int_cmd {
 
 /// `(device, int32_t value) -> E384Err`
 macro_rules! one_int_cmd {
-    ($name:ident, $sys_fn:path) => {
+    ($doc:literal, $name:ident, $sys_fn:path) => {
+        #[doc = $doc]
         pub fn $name(&self, value: i32) -> Result<(), ErrorCodes> {
             unsafe { translate($sys_fn(self.0, value)) }
         }
@@ -23,7 +30,8 @@ macro_rules! one_int_cmd {
 
 /// `(device, E384Measurement value, int32_t flag) -> E384Err`
 macro_rules! measurement_flag_cmd {
-    ($name:ident, $sys_fn:path) => {
+    ($doc:literal, $name:ident, $sys_fn:path) => {
+        #[doc = $doc]
         pub fn $name(&self, value: E384Measurement, flag: bool) -> Result<(), ErrorCodes> {
             unsafe { translate($sys_fn(self.0, value, flag as i32)) }
         }
@@ -31,25 +39,75 @@ macro_rules! measurement_flag_cmd {
 }
 
 impl Device {
-    two_int_cmd!(reset_asic, crate::sys::e384_resetAsic);
-    two_int_cmd!(reset_fpga, crate::sys::e384_resetFpga);
-    two_int_cmd!(turn_voltage_reader_on, crate::sys::e384_turnVoltageReaderOn);
-    two_int_cmd!(turn_current_reader_on, crate::sys::e384_turnCurrentReaderOn);
-    two_int_cmd!(turn_voltage_stimulus_on, crate::sys::e384_turnVoltageStimulusOn);
-    two_int_cmd!(turn_current_stimulus_on, crate::sys::e384_turnCurrentStimulusOn);
-    two_int_cmd!(enable_vc_compensations, crate::sys::e384_enableVcCompensations);
-    two_int_cmd!(enable_cc_compensations, crate::sys::e384_enableCcCompensations);
+    two_int_cmd!(
+        "Wraps `e384_resetAsic`.",
+        reset_asic,
+        crate::sys::e384_resetAsic
+    );
+    two_int_cmd!(
+        "Wraps `e384_resetFpga`.",
+        reset_fpga,
+        crate::sys::e384_resetFpga
+    );
+    two_int_cmd!(
+        "Wraps `e384_turnVoltageReaderOn`.",
+        turn_voltage_reader_on,
+        crate::sys::e384_turnVoltageReaderOn
+    );
+    two_int_cmd!(
+        "Wraps `e384_turnCurrentReaderOn`.",
+        turn_current_reader_on,
+        crate::sys::e384_turnCurrentReaderOn
+    );
+    two_int_cmd!(
+        "Wraps `e384_turnVoltageStimulusOn`.",
+        turn_voltage_stimulus_on,
+        crate::sys::e384_turnVoltageStimulusOn
+    );
+    two_int_cmd!(
+        "Wraps `e384_turnCurrentStimulusOn`.",
+        turn_current_stimulus_on,
+        crate::sys::e384_turnCurrentStimulusOn
+    );
+    two_int_cmd!(
+        "Wraps `e384_enableVcCompensations`.",
+        enable_vc_compensations,
+        crate::sys::e384_enableVcCompensations
+    );
+    two_int_cmd!(
+        "Wraps `e384_enableCcCompensations`.",
+        enable_cc_compensations,
+        crate::sys::e384_enableCcCompensations
+    );
 
     one_int_cmd!(
+        "Wraps `e384_subtractLiquidJunctionFromCc`.",
         subtract_liquid_junction_from_cc,
         crate::sys::e384_subtractLiquidJunctionFromCc
     );
-    one_int_cmd!(set_calibration_mode, crate::sys::e384_setCalibrationMode);
+    one_int_cmd!(
+        "Wraps `e384_setCalibrationMode`.",
+        set_calibration_mode,
+        crate::sys::e384_setCalibrationMode
+    );
 
-    measurement_flag_cmd!(set_voltage_reference, crate::sys::e384_setVoltageReference);
-    measurement_flag_cmd!(set_cooling_fans_speed, crate::sys::e384_setCoolingFansSpeed);
-    measurement_flag_cmd!(set_temperature_control, crate::sys::e384_setTemperatureControl);
+    measurement_flag_cmd!(
+        "Wraps `e384_setVoltageReference`.",
+        set_voltage_reference,
+        crate::sys::e384_setVoltageReference
+    );
+    measurement_flag_cmd!(
+        "Wraps `e384_setCoolingFansSpeed`.",
+        set_cooling_fans_speed,
+        crate::sys::e384_setCoolingFansSpeed
+    );
+    measurement_flag_cmd!(
+        "Wraps `e384_setTemperatureControl`.",
+        set_temperature_control,
+        crate::sys::e384_setTemperatureControl
+    );
 
+    /// Wraps `e384_enableRxMessageType`.
     pub fn enable_rx_message_type(&self, message_type: i32, flag: bool) -> Result<(), ErrorCodes> {
         unsafe {
             translate(crate::sys::e384_enableRxMessageType(
@@ -60,6 +118,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setAdcCore`. `channels`/`clamping_modes` must be equal length.
     pub fn set_adc_core(
         &self,
         channels: &[u16],
@@ -78,10 +137,12 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_sendSpiCommand`.
     pub fn send_spi_command(&self, command: u32, data_load: u32) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_sendSpiCommand(self.0, command, data_load)) }
     }
 
+    /// Wraps `e384_setCustomFlag`.
     pub fn set_custom_flag(&self, idx: u16, flag: bool, apply: bool) -> Result<(), ErrorCodes> {
         unsafe {
             translate(crate::sys::e384_setCustomFlag(
@@ -93,6 +154,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCustomOption`.
     pub fn set_custom_option(&self, idx: u16, value: u16, apply: bool) -> Result<(), ErrorCodes> {
         unsafe {
             translate(crate::sys::e384_setCustomOption(
@@ -104,6 +166,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCustomDouble`.
     pub fn set_custom_double(&self, idx: u16, value: f64, apply: bool) -> Result<(), ErrorCodes> {
         unsafe {
             translate(crate::sys::e384_setCustomDouble(
@@ -115,6 +178,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setDebugBit`.
     pub fn set_debug_bit(
         &self,
         word_offset: u16,
@@ -133,10 +197,18 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setDebugWord`.
     pub fn set_debug_word(&self, word_offset: u16, word_value: u16) -> Result<(), ErrorCodes> {
-        unsafe { translate(crate::sys::e384_setDebugWord(self.0, word_offset, word_value)) }
+        unsafe {
+            translate(crate::sys::e384_setDebugWord(
+                self.0,
+                word_offset,
+                word_value,
+            ))
+        }
     }
 
+    /// Wraps `e384_setStateArrayEnabled`.
     pub fn set_state_array_enabled(&self, ch_idx: i32, enabled: bool) -> Result<(), ErrorCodes> {
         unsafe {
             translate(crate::sys::e384_setStateArrayEnabled(
@@ -147,10 +219,12 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setTemperatureControlPid`.
     pub fn set_temperature_control_pid(&self, params: E384PidParams) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_setTemperatureControlPid(self.0, params)) }
     }
 
+    /// Wraps `e384_zap`.
     pub fn zap(&self, channels: &[u16], duration: E384Measurement) -> Result<(), ErrorCodes> {
         unsafe {
             translate(crate::sys::e384_zap(
@@ -162,6 +236,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setStateArrayStructure`.
     pub fn set_state_array_structure(
         &self,
         number_of_states: i32,
@@ -178,6 +253,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setSateArrayState` (typo preserved from the C header's exported symbol name).
     #[allow(clippy::too_many_arguments)]
     pub fn set_state_array_state(
         &self,
@@ -209,7 +285,8 @@ impl Device {
         }
     }
 
-    /// Custom boolean flags, their default values, and their display names.
+    /// Wraps `e384_getCustomFlags`: custom boolean flags, their default values, and their
+    /// display names.
     pub fn custom_flags(&self) -> Result<(Vec<bool>, Vec<String>), ErrorCodes> {
         let mut count: usize = 0;
         let mut names = std::ptr::null_mut();
@@ -241,7 +318,8 @@ impl Device {
         Ok((defaults.into_iter().map(|v| v != 0).collect(), names))
     }
 
-    /// Custom double-valued ranges, their default values, and their display names.
+    /// Wraps `e384_getCustomDoubles`: custom double-valued ranges, their default values, and
+    /// their display names.
     pub fn custom_doubles(
         &self,
     ) -> Result<(Vec<E384RangedMeasurement>, Vec<f64>, Vec<String>), ErrorCodes> {

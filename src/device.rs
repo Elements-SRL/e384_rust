@@ -1,3 +1,8 @@
+//! `Device` — the connection handle every other `device_*` module adds methods to. Covers
+//! device discovery (`e384_detectDevices`/`e384_listAllDevices`) and the connect/disconnect
+//! lifecycle. `Drop` calls `e384_disconnect` unconditionally and ignores its result, per the
+//! header's contract that the handle is invalid afterward regardless of the returned error code.
+
 use std::ffi::CString;
 use tracing::instrument;
 
@@ -5,32 +10,39 @@ use crate::error_codes::ErrorCodes;
 use crate::sys::{E384Device, E384DeviceList};
 use crate::util::{owned_string_list, translate};
 
+/// An open connection to an e384 device. `E384ChannelModel`/`E384BoardModel` handles obtained via
+/// [`crate::channel_model::Channel`]/[`crate::board_model::Board`] and the RX buffer obtained via
+/// [`crate::device_acquisition::RxBuffer`] all borrow from this type and become unusable once it
+/// is dropped.
 pub struct Device(pub(crate) *mut E384Device);
 
 impl Device {
+    /// Wraps `e384_connect`.
     #[instrument]
     pub fn connect(device_id: &str) -> Result<Self, ErrorCodes> {
         let Ok(c_id) = CString::new(device_id) else {
             return Err(ErrorCodes::ErrorDeviceNotFound);
         };
         let mut ptr: *mut E384Device = std::ptr::null_mut();
-        unsafe { translate(crate::sys::e384_connect(c_id.as_ptr(), &mut ptr).into()) }?;
+        unsafe { translate(crate::sys::e384_connect(c_id.as_ptr(), &mut ptr)) }?;
         Ok(Device(ptr))
     }
 
+    /// Wraps `e384_detectDevices`.
     #[instrument]
     pub fn list_devices() -> Result<Vec<String>, ErrorCodes> {
         let mut list: *mut E384DeviceList = std::ptr::null_mut();
-        unsafe { translate(crate::sys::e384_detectDevices(&mut list).into()) }?;
+        unsafe { translate(crate::sys::e384_detectDevices(&mut list)) }?;
         let devices = unsafe { owned_string_list(list) };
         tracing::info!("Found {} device(s):", devices.len());
         Ok(devices)
     }
 
+    /// Wraps `e384_listAllDevices` (includes already-owned devices, unlike `list_devices`).
     #[instrument]
     pub fn list_all_devices() -> Result<Vec<String>, ErrorCodes> {
         let mut list: *mut E384DeviceList = std::ptr::null_mut();
-        unsafe { translate(crate::sys::e384_listAllDevices(&mut list).into()) }?;
+        unsafe { translate(crate::sys::e384_listAllDevices(&mut list)) }?;
         let devices = unsafe { owned_string_list(list) };
         tracing::info!("Found {} device(s):", devices.len());
         Ok(devices)
@@ -38,6 +50,7 @@ impl Device {
 }
 
 impl Drop for Device {
+    /// Wraps `e384_disconnect` (`overheatFlag` always `0`); result ignored, see module docs.
     fn drop(&mut self) {
         unsafe { crate::sys::e384_disconnect(self.0, 0) };
     }

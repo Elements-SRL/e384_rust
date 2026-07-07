@@ -1,10 +1,13 @@
+//! Raw ADC sample (`i16`) to physical value (`f64`) conversion, and the disambiguated
+//! per-channel overloads of the single-value converters.
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::util::translate;
 
 impl Device {
-    /// Converts a buffer of raw ADC samples to voltages in place... actually
-    /// out-of-place: `flt_values` must have the same length as `int_values`.
+    /// Wraps `e384_convertVoltageValues`. Out-of-place: `flt_values` must be the same length as
+    /// `int_values`.
     pub fn convert_voltage_values(
         &self,
         int_values: &mut [i16],
@@ -21,6 +24,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_convertCurrentValues`. `int_values`/`flt_values` must be equal length.
     pub fn convert_current_values(
         &self,
         int_values: &mut [i16],
@@ -37,7 +41,8 @@ impl Device {
         }
     }
 
-    /// `int_values`/`flt_values` must be sized to the device's temperature channel count.
+    /// Wraps `e384_convertTemperatureValues`. `int_values`/`flt_values` must be sized to the
+    /// device's temperature channel count.
     pub fn convert_temperature_values(
         &self,
         int_values: &mut [i16],
@@ -52,6 +57,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_convertOnTimeValue`.
     pub fn convert_on_time_value(&self, int_values: &mut [i16; 2]) -> Result<f64, ErrorCodes> {
         let mut flt_value = 0.0;
         unsafe {
@@ -64,12 +70,18 @@ impl Device {
         Ok(flt_value)
     }
 
+    /// Wraps `e384_convertVoltageValue`.
     pub fn convert_voltage_value(&self, int_value: i16) -> Result<f64, ErrorCodes> {
         let mut out = 0.0;
-        unsafe { translate(crate::sys::e384_convertVoltageValue(self.0, int_value, &mut out)) }?;
+        unsafe {
+            translate(crate::sys::e384_convertVoltageValue(
+                self.0, int_value, &mut out,
+            ))
+        }?;
         Ok(out)
     }
 
+    /// Wraps `e384_convertVoltageValue_byChannel`.
     pub fn convert_voltage_value_by_channel(
         &self,
         int_value: i16,
@@ -87,12 +99,18 @@ impl Device {
         Ok(out)
     }
 
+    /// Wraps `e384_convertCurrentValue`.
     pub fn convert_current_value(&self, int_value: i16) -> Result<f64, ErrorCodes> {
         let mut out = 0.0;
-        unsafe { translate(crate::sys::e384_convertCurrentValue(self.0, int_value, &mut out)) }?;
+        unsafe {
+            translate(crate::sys::e384_convertCurrentValue(
+                self.0, int_value, &mut out,
+            ))
+        }?;
         Ok(out)
     }
 
+    /// Wraps `e384_convertCurrentValue_byChannel`.
     pub fn convert_current_value_by_channel(
         &self,
         int_value: i16,

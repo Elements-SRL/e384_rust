@@ -1,9 +1,12 @@
+//! Voltage/current protocol builders (structure/step/ramp/sin) and protocol range features.
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::sys::{E384Measurement, E384RangedMeasurement};
 use crate::util::{collect_list, translate};
 
 impl Device {
+    /// Wraps `e384_setVoltageProtocolStructure`.
     pub fn set_voltage_protocol_structure(
         &self,
         prot_id: u16,
@@ -24,6 +27,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setVoltageProtocolStep`.
     #[allow(clippy::too_many_arguments)]
     pub fn set_voltage_protocol_step(
         &self,
@@ -56,6 +60,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setVoltageProtocolRamp`.
     #[allow(clippy::too_many_arguments)]
     pub fn set_voltage_protocol_ramp(
         &self,
@@ -92,6 +97,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setVoltageProtocolSin`.
     #[allow(clippy::too_many_arguments)]
     pub fn set_voltage_protocol_sin(
         &self,
@@ -128,6 +134,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCurrentProtocolStructure`.
     pub fn set_current_protocol_structure(
         &self,
         prot_id: u16,
@@ -148,6 +155,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCurrentProtocolStep`.
     #[allow(clippy::too_many_arguments)]
     pub fn set_current_protocol_step(
         &self,
@@ -180,6 +188,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCurrentProtocolRamp`.
     #[allow(clippy::too_many_arguments)]
     pub fn set_current_protocol_ramp(
         &self,
@@ -216,6 +225,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_setCurrentProtocolSin`.
     #[allow(clippy::too_many_arguments)]
     pub fn set_current_protocol_sin(
         &self,
@@ -252,6 +262,7 @@ impl Device {
         }
     }
 
+    /// Wraps `e384_getVoltageProtocolRangeFeature`.
     pub fn voltage_protocol_range_feature(
         &self,
         range_idx: u16,
@@ -265,6 +276,7 @@ impl Device {
         Ok(out)
     }
 
+    /// Wraps `e384_getCurrentProtocolRangeFeature`.
     pub fn current_protocol_range_feature(
         &self,
         range_idx: u16,
@@ -278,6 +290,7 @@ impl Device {
         Ok(out)
     }
 
+    /// Wraps `e384_getVoltageRampTunerFeatures`: voltage ranges plus the shared duration range.
     pub fn voltage_ramp_tuner_features(
         &self,
     ) -> Result<(Vec<E384RangedMeasurement>, E384RangedMeasurement), ErrorCodes> {

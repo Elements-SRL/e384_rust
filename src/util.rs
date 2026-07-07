@@ -1,3 +1,8 @@
+//! Shared building blocks reused by every `device_*` module: raw `E384Err` → `Result` translation,
+//! the two-call size/fill list protocol (`collect_list`/`collect_matrix`/
+//! `collect_list_with_default_idx`), owned string/list extraction, and the shape A/B/C channel
+//! command helpers (`channel_cmd_*`).
+
 use std::ffi::CStr;
 
 use tracing::instrument;
@@ -7,6 +12,7 @@ use crate::{
     sys::{E384DeviceList, E384Err, E384Measurement, E384String},
 };
 
+/// Converts a raw `E384Err` into a `Result`, via [`ErrorCodes::from`] + [`ErrorCodes::to_res`].
 #[instrument]
 pub fn translate(err: E384Err) -> Result<(), ErrorCodes> {
     let e: ErrorCodes = err.into();
@@ -122,7 +128,11 @@ pub(crate) unsafe fn owned_string_list(list: *mut E384DeviceList) -> Vec<String>
             continue;
         }
         // Copy the string out now — it's only valid until deviceList_free.
-        out.push(unsafe { CStr::from_ptr(ptr) }.to_string_lossy().into_owned());
+        out.push(
+            unsafe { CStr::from_ptr(ptr) }
+                .to_string_lossy()
+                .into_owned(),
+        );
     }
     unsafe { crate::sys::e384_deviceList_free(list) };
     out
