@@ -23,6 +23,9 @@ fn main() {
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        // Needed so plain-data structs (E384Measurement, E384RangedMeasurement, ...)
+        // can be zero-initialized by the two-call size/fill helpers.
+        .derive_default(true)
         // Finish the builder and generate the bindings.
         .generate()
         // Unwrap the Result and panic on failure.
