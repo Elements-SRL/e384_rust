@@ -303,4 +303,24 @@ impl Device {
         }?;
         Ok((voltage_ranges, duration_range))
     }
+
+    /// Wraps `e384_sendCommands`.
+    pub fn send_commands(&self) -> Result<(), ErrorCodes> {
+        unsafe { translate(crate::sys::e384_sendCommands(self.0)) }
+    }
+
+    /// Wraps `e384_startProtocol`.
+    pub fn start_protocol(&self) -> Result<(), ErrorCodes> {
+        unsafe { translate(crate::sys::e384_startProtocol(self.0)) }
+    }
+
+    /// Wraps `e384_stopProtocol`.
+    pub fn stop_protocol(&self) -> Result<(), ErrorCodes> {
+        unsafe { translate(crate::sys::e384_stopProtocol(self.0)) }
+    }
+
+    /// Wraps `e384_startStateArray`.
+    pub fn start_state_array(&self) -> Result<(), ErrorCodes> {
+        unsafe { translate(crate::sys::e384_startStateArray(self.0)) }
+    }
 }

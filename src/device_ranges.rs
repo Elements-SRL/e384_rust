@@ -207,6 +207,11 @@ impl Device {
         crate::sys::e384_setSamplingRate
     );
 
+    /// Wraps `e384_setDownsamplingRatio` (`(device, uint32_t value) -> E384Err`).
+    pub fn set_downsampling_ratio(&self, value: u32) -> Result<(), ErrorCodes> {
+        unsafe { translate(crate::sys::e384_setDownsamplingRatio(self.0, value)) }
+    }
+
     // -- index/scalar getters -----------------------------------------------------
     u32_getter!(
         "Wraps `e384_getClampingModalityIdx`.",
@@ -219,9 +224,19 @@ impl Device {
         crate::sys::e384_getVCVoltageRangeIdx
     );
     u32_getter!(
+        "Wraps `e384_getVCCurrentRangeIdx`.",
+        vc_current_range_idx,
+        crate::sys::e384_getVCCurrentRangeIdx
+    );
+    u32_getter!(
         "Wraps `e384_getCCCurrentRangeIdx`.",
         cc_current_range_idx,
         crate::sys::e384_getCCCurrentRangeIdx
+    );
+    u32_getter!(
+        "Wraps `e384_getCCVoltageRangeIdx`.",
+        cc_voltage_range_idx,
+        crate::sys::e384_getCCVoltageRangeIdx
     );
     u32_getter!(
         "Wraps `e384_getSamplingRateIdx`.",
