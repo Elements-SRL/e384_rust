@@ -2,6 +2,19 @@
 name = "e384_rust"
 version = "0.1.0"
 edition = "2024"
+include = [
+    "src/**",
+    "build.rs",
+    "vendor/e384c/**",
+    "Cargo.toml",
+    "README.md",
+]
+
+[features]
+default = ["bundled"]
+# Copies e384c.dll (and, if E384C_DLL_DIR is set, its runtime dependency DLLs) next to
+# the build output. Disable if you manage DLL deployment yourself.
+bundled = []
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

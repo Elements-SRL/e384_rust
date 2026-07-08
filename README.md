@@ -5,21 +5,27 @@ A safe Rust wrapper over `e384CommLib`, the control library for e384 amplifier h
 
 ## Prerequisites / build
 
-`build.rs` runs bindgen against a hard-coded local path:
+`e384c` (header, import lib, and DLL) is vendored under `vendor/e384c/`, so `cargo build`/`check`/`test`
+work out of the box with no setup — `build.rs` finds them there by default and, with the default
+`bundled` feature, copies `e384c.dll` next to the build output automatically.
 
-```
-C:\Users\lross\development\e384c\include\e384c.h
-```
+To build against a different `e384c` (e.g. while developing it locally), override the vendored copy with
+environment variables:
 
-and links against the `e384c` import lib at:
+| Env var | Points to | Default |
+|---|---|---|
+| `E384C_INCLUDE_DIR` | directory containing `e384c.h` | `vendor/e384c/include` |
+| `E384C_LIB_DIR` | directory containing `e384c.lib` | `vendor/e384c/lib` |
+| `E384C_DLL_DIR` | directory containing `e384c.dll`'s own runtime dependency DLLs | none |
 
-```
-C:\Users\lross\development\e384c\build\Desktop_Qt_6_7_3_MSVC2022_64bit-Release
-```
+`e384c.dll` itself is redistributable and vendored, but its own third-party runtime dependencies (e.g.
+Qt DLLs it was built against) are **not** vendored here due to unclear licensing on those upstream
+libraries. If running the built binary fails to find a DLL, either set `E384C_DLL_DIR` to a directory
+containing them so `build.rs` copies them alongside the build output, or ensure they're already on
+`PATH`.
 
-Both must exist on disk for `cargo build`/`cargo check`/`cargo test` to work — the header and lib are not
-vendored into this repo. There is no fallback; if you're setting this up on a new machine, build `e384c`
-first and update these paths in `build.rs`.
+Set `default-features = false` on this dependency to skip the automatic DLL copy step if you manage
+deployment yourself.
 
 ## Architecture overview
 
