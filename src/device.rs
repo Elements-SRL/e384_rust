@@ -14,7 +14,14 @@ use crate::util::{owned_string_list, translate};
 /// [`crate::channel_model::Channel`]/[`crate::board_model::Board`] and the RX buffer obtained via
 /// [`crate::device_acquisition::RxBuffer`] all borrow from this type and become unusable once it
 /// is dropped.
+#[derive(Debug)]
 pub struct Device(pub(crate) *mut E384Device);
+
+// SAFETY: e384CommLib is confirmed thread-safe for concurrent calls on the same device handle
+// (e.g. one thread issuing commands while another polls `e384_getNextMessage`), so it's sound
+// to share and send this handle across threads.
+unsafe impl Send for Device {}
+unsafe impl Sync for Device {}
 
 impl Device {
     /// Wraps `e384_connect`.
