@@ -40,6 +40,12 @@ fn main() {
     //                             (Opal Kelly import stub -> okFrontPanel.dll at runtime)
     //   MPSSE_LIB_DIR          -> directory containing `MPSSE.lib`
     //                             (FTDI MPSSE import stub -> MPSSE.dll at runtime)
+    //   CYAPI_LIB_DIR          -> directory containing `CyAPI.lib`
+    //                             (Cypress CyUSB SDK, static — no runtime DLL)
+    //   FTDI_UTILS_LIB_DIR     -> directory containing `ftdi_utils.lib`
+    //                             (FTDI wrapper, static — no runtime DLL; this is the
+    //                             release build, distinct from the debug `ftdi_utilsd`
+    //                             which ships as a DLL + import lib instead)
     //
     //   None of the vars above have a fallback or default — nothing is vendored
     //   in this repo, so every one of them must be set explicitly. Put the
@@ -65,6 +71,14 @@ fn main() {
     let mpsse_dir = resolve_dir("MPSSE_LIB_DIR", "MPSSE.lib");
     println!("cargo:rustc-link-search={}", mpsse_dir.display());
     println!("cargo:rustc-link-lib=MPSSE"); // import stub -> MPSSE.dll at runtime
+
+    let cyapi_dir = resolve_dir("CYAPI_LIB_DIR", "CyAPI.lib");
+    println!("cargo:rustc-link-search={}", cyapi_dir.display());
+    println!("cargo:rustc-link-lib=static=CyAPI");
+
+    let ftdi_utils_dir = resolve_dir("FTDI_UTILS_LIB_DIR", "ftdi_utils.lib");
+    println!("cargo:rustc-link-search={}", ftdi_utils_dir.display());
+    println!("cargo:rustc-link-lib=static=ftdi_utils");
 
     let header = include_dir.join("e384c.h");
 
