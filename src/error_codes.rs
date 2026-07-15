@@ -248,7 +248,9 @@ impl From<E384Err> for ErrorCodes {
             v if v == ERROR_GROUP_DEVICE_COMMANDS + 0x0000000A => {
                 ErrorCodes::ErrorWrongClampModality
             }
-            v if v == ERROR_GROUP_DEVICE_COMMANDS + 0x8000000B => ErrorCodes::WarningValueClipped,
+            // Not group-relative: the header defines this as the literal value 0x8000000B,
+            // not ERROR_GROUP_DEVICE_COMMANDS + 0xB.
+            0x8000000B => ErrorCodes::WarningValueClipped,
             v if v == ERROR_GROUP_DEVICE_COMMANDS + 0x0000000C => {
                 ErrorCodes::ErrorCompensationNotEnabled
             }

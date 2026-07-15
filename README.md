@@ -5,27 +5,29 @@ A safe Rust wrapper over `e384CommLib`, the control library for e384 amplifier h
 
 ## Prerequisites / build
 
-`e384c` (header, import lib, and DLL) is vendored under `vendor/e384c/`, so `cargo build`/`check`/`test`
-work out of the box with no setup — `build.rs` finds them there by default and, with the default
-`bundled` feature, copies `e384c.dll` next to the build output automatically.
+Nothing is vendored in this repo. `e384c` is a **static** library, and `e384c.lib` leaves
+`e384commlib` and its transitive vendor SDKs (FTDI, Opal Kelly `okFrontPanel`, the FTDI MPSSE lib)
+**unresolved** — every header/lib directory below must be supplied via environment variable before
+`cargo build`/`check`/`test` will succeed; `build.rs` panics with an actionable message naming
+whichever one is missing first.
 
-To build against a different `e384c` (e.g. while developing it locally), override the vendored copy with
-environment variables:
+| Env var | Points to |
+|---|---|
+| `E384C_INCLUDE_DIR` | directory containing `e384c.h` |
+| `E384C_LIB_DIR` | directory containing `e384c.lib` |
+| `E384COMMLIB_LIB_DIR` | directory containing `e384commlib.lib` |
+| `FTD2XX_LIB_DIR` | directory containing `ftd2xx.lib` |
+| `OKFRONTPANEL_LIB_DIR` | directory containing `okFrontPanel.lib` |
+| `MPSSE_LIB_DIR` | directory containing `MPSSE.lib` |
 
-| Env var | Points to | Default |
-|---|---|---|
-| `E384C_INCLUDE_DIR` | directory containing `e384c.h` | `vendor/e384c/include` |
-| `E384C_LIB_DIR` | directory containing `e384c.lib` | `vendor/e384c/lib` |
-| `E384C_DLL_DIR` | directory containing `e384c.dll`'s own runtime dependency DLLs | none |
+None of these vars have a fallback or default — every directory must be set explicitly
+(`cargo check` alone doesn't require the libs to actually be present at link time to pass, only the
+directories to exist).
 
-`e384c.dll` itself is redistributable and vendored, but its own third-party runtime dependencies (e.g.
-Qt DLLs it was built against) are **not** vendored here due to unclear licensing on those upstream
-libraries. If running the built binary fails to find a DLL, either set `E384C_DLL_DIR` to a directory
-containing them so `build.rs` copies them alongside the build output, or ensure they're already on
-`PATH`.
-
-Set `default-features = false` on this dependency to skip the automatic DLL copy step if you manage
-deployment yourself.
+The three vendor **runtime DLLs** (`FTD2XX.dll`, `MPSSE.dll`, `okFrontPanel.dll`) are not this
+crate's concern — it does not copy any DLLs next to the build output. The consumer binary (and its
+installer) is responsible for placing those DLLs next to the final executable. `e384commlib` is
+itself static, so it has no runtime DLL.
 
 ## Architecture overview
 
