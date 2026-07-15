@@ -75,6 +75,10 @@ fn main() {
     let cyapi_dir = resolve_dir("CYAPI_LIB_DIR", "CyAPI.lib");
     println!("cargo:rustc-link-search={}", cyapi_dir.display());
     println!("cargo:rustc-link-lib=static=CyAPI");
+    // CyAPI.lib calls into SetupDi* (device enumeration) and MessageBoxA /
+    // (Un)RegisterDeviceNotification (Windows SDK), so both must be named explicitly.
+    println!("cargo:rustc-link-lib=setupapi");
+    println!("cargo:rustc-link-lib=user32");
 
     let ftdi_utils_dir = resolve_dir("FTDI_UTILS_LIB_DIR", "ftdi_utils.lib");
     println!("cargo:rustc-link-search={}", ftdi_utils_dir.display());
