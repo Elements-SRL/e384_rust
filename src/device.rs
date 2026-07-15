@@ -25,7 +25,7 @@ unsafe impl Sync for Device {}
 
 impl Device {
     /// Wraps `e384_connect`.
-    #[instrument]
+    #[instrument(level = "trace")]
     pub fn connect(device_id: &str) -> Result<Self, ErrorCodes> {
         let Ok(c_id) = CString::new(device_id) else {
             return Err(ErrorCodes::ErrorDeviceNotFound);
@@ -36,7 +36,7 @@ impl Device {
     }
 
     /// Wraps `e384_detectDevices`.
-    #[instrument]
+    #[instrument(level = "trace")]
     pub fn list_devices() -> Result<Vec<String>, ErrorCodes> {
         let mut list: *mut E384DeviceList = std::ptr::null_mut();
         unsafe { translate(crate::sys::e384_detectDevices(&mut list)) }?;
@@ -46,7 +46,7 @@ impl Device {
     }
 
     /// Wraps `e384_listAllDevices` (includes already-owned devices, unlike `list_devices`).
-    #[instrument]
+    #[instrument(level = "trace")]
     pub fn list_all_devices() -> Result<Vec<String>, ErrorCodes> {
         let mut list: *mut E384DeviceList = std::ptr::null_mut();
         unsafe { translate(crate::sys::e384_listAllDevices(&mut list)) }?;

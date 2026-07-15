@@ -3,6 +3,8 @@
 //! method still gets its own one-line `/// Wraps \`e384_...\`` doc comment, even though the
 //! bodies are otherwise identical mechanical calls into [`crate::util`]'s shape helpers.
 
+use tracing::instrument;
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::sys::E384Measurement;
@@ -12,6 +14,7 @@ use crate::util::{channel_cmd_bool, channel_cmd_measurement, channel_cmd_update}
 macro_rules! measurement_cmd {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(
             &self,
             channels: &[u16],
@@ -35,6 +38,7 @@ macro_rules! measurement_cmd {
 macro_rules! update_cmd {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self, channels: &[u16], apply: bool) -> Result<(), ErrorCodes> {
             let dev = self.0;
             unsafe { channel_cmd_update(|c, n, a| $sys_fn(dev, c, n, a), channels, apply) }
@@ -46,6 +50,7 @@ macro_rules! update_cmd {
 macro_rules! bool_cmd {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self, channels: &[u16], on: &[bool], apply: bool) -> Result<(), ErrorCodes> {
             let dev = self.0;
             unsafe { channel_cmd_bool(|c, o, n, a| $sys_fn(dev, c, o, n, a), channels, on, apply) }

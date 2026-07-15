@@ -3,6 +3,8 @@
 //! Range getters that use the two-call protocol with a default-index out-param return
 //! `(ranges, default_idx)` — see `crate::util::collect_list_with_default_idx`.
 
+use tracing::instrument;
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::sys::{E384Measurement, E384RangedMeasurement};
@@ -12,6 +14,7 @@ use crate::util::{collect_list, collect_list_with_default_idx, translate};
 macro_rules! scalar_setter {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self, value: u16, apply: bool) -> Result<(), ErrorCodes> {
             unsafe { translate($sys_fn(self.0, value, apply as i32)) }
         }
@@ -22,6 +25,7 @@ macro_rules! scalar_setter {
 macro_rules! u32_getter {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self) -> Result<u32, ErrorCodes> {
             let mut out: u32 = 0;
             unsafe { translate($sys_fn(self.0, &mut out)) }?;
@@ -34,6 +38,7 @@ macro_rules! u32_getter {
 macro_rules! measurement_getter {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self) -> Result<E384Measurement, ErrorCodes> {
             let mut out = E384Measurement::default();
             unsafe { translate($sys_fn(self.0, &mut out)) }?;
@@ -46,6 +51,7 @@ macro_rules! measurement_getter {
 macro_rules! measurement_list_getter {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self) -> Result<Vec<E384Measurement>, ErrorCodes> {
             let dev = self.0;
             unsafe { collect_list(|out, count| $sys_fn(dev, out, count)) }
@@ -57,6 +63,7 @@ macro_rules! measurement_list_getter {
 macro_rules! ranged_list_getter {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self) -> Result<Vec<E384RangedMeasurement>, ErrorCodes> {
             let dev = self.0;
             unsafe { collect_list(|out, count| $sys_fn(dev, out, count)) }
@@ -68,6 +75,7 @@ macro_rules! ranged_list_getter {
 macro_rules! ranged_list_with_default_idx_getter {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self) -> Result<(Vec<E384RangedMeasurement>, u16), ErrorCodes> {
             let dev = self.0;
             unsafe {
@@ -81,6 +89,7 @@ macro_rules! ranged_list_with_default_idx_getter {
 macro_rules! ranged_with_idx_getter {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self) -> Result<(E384RangedMeasurement, u32), ErrorCodes> {
             let mut range = E384RangedMeasurement::default();
             let mut idx: u32 = 0;
@@ -93,6 +102,7 @@ macro_rules! ranged_with_idx_getter {
 impl Device {
     // -- current/voltage ranges --------------------------------------------------
     /// Wraps `e384_getVCCurrentRange`.
+    #[instrument(level = "trace")]
     pub fn vc_current_range(&self) -> Result<E384RangedMeasurement, ErrorCodes> {
         let mut out = E384RangedMeasurement::default();
         unsafe { translate(crate::sys::e384_getVCCurrentRange(self.0, &mut out)) }?;
@@ -208,6 +218,7 @@ impl Device {
     );
 
     /// Wraps `e384_setDownsamplingRatio` (`(device, uint32_t value) -> E384Err`).
+    #[instrument(level = "trace")]
     pub fn set_downsampling_ratio(&self, value: u32) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_setDownsamplingRatio(self.0, value)) }
     }
@@ -377,6 +388,7 @@ impl Device {
 
     // -- disambiguated overloads --------------------------------------------------------
     /// Wraps `e384_setVCCurrentRange_perChannel`.
+    #[instrument(level = "trace")]
     pub fn set_vc_current_range_per_channel(
         &self,
         channels: &[u16],
@@ -396,6 +408,7 @@ impl Device {
     }
 
     /// Wraps `e384_setCCVoltageRange_perChannel`.
+    #[instrument(level = "trace")]
     pub fn set_cc_voltage_range_per_channel(
         &self,
         channels: &[u16],
@@ -421,6 +434,7 @@ impl Device {
     );
 
     /// Wraps `e384_getCCVoltageRange`.
+    #[instrument(level = "trace")]
     pub fn cc_voltage_range(&self) -> Result<E384RangedMeasurement, ErrorCodes> {
         let mut out = E384RangedMeasurement::default();
         unsafe { translate(crate::sys::e384_getCCVoltageRange(self.0, &mut out)) }?;
@@ -433,6 +447,7 @@ impl Device {
     );
 
     /// Wraps `e384_getVoltageRange`.
+    #[instrument(level = "trace")]
     pub fn voltage_range(&self) -> Result<E384RangedMeasurement, ErrorCodes> {
         let mut out = E384RangedMeasurement::default();
         unsafe { translate(crate::sys::e384_getVoltageRange(self.0, &mut out)) }?;
@@ -445,6 +460,7 @@ impl Device {
     );
 
     /// Wraps `e384_getCurrentRange`.
+    #[instrument(level = "trace")]
     pub fn current_range(&self) -> Result<E384RangedMeasurement, ErrorCodes> {
         let mut out = E384RangedMeasurement::default();
         unsafe { translate(crate::sys::e384_getCurrentRange(self.0, &mut out)) }?;
@@ -457,6 +473,7 @@ impl Device {
     );
 
     /// Wraps `e384_getVCCurrentRangeIdx_list` (two-call `(device, uint32_t* out, size_t* count) -> E384Err`).
+    #[instrument(level = "trace")]
     pub fn vc_current_range_idx_list(&self) -> Result<Vec<u32>, ErrorCodes> {
         let dev = self.0;
         unsafe {
@@ -465,6 +482,7 @@ impl Device {
     }
 
     /// Wraps `e384_getCCVoltageRangeIdx_list`.
+    #[instrument(level = "trace")]
     pub fn cc_voltage_range_idx_list(&self) -> Result<Vec<u32>, ErrorCodes> {
         let dev = self.0;
         unsafe {
@@ -474,6 +492,7 @@ impl Device {
 
     /// Wraps `e384_getVCCurrentRanges_perChannel`: per-channel VC current ranges with their
     /// default index per channel.
+    #[instrument(level = "trace")]
     pub fn vc_current_ranges_per_channel(
         &self,
     ) -> Result<(Vec<E384RangedMeasurement>, Vec<u16>), ErrorCodes> {

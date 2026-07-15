@@ -1,5 +1,7 @@
 //! Voltage/current protocol builders (structure/step/ramp/sin) and protocol range features.
 
+use tracing::instrument;
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::sys::{E384Measurement, E384RangedMeasurement};
@@ -7,6 +9,7 @@ use crate::util::{collect_list, translate};
 
 impl Device {
     /// Wraps `e384_setVoltageProtocolStructure`.
+    #[instrument(level = "trace")]
     pub fn set_voltage_protocol_structure(
         &self,
         prot_id: u16,
@@ -29,6 +32,7 @@ impl Device {
 
     /// Wraps `e384_setVoltageProtocolStep`.
     #[allow(clippy::too_many_arguments)]
+    #[instrument(level = "trace")]
     pub fn set_voltage_protocol_step(
         &self,
         item_idx: u16,
@@ -62,6 +66,7 @@ impl Device {
 
     /// Wraps `e384_setVoltageProtocolRamp`.
     #[allow(clippy::too_many_arguments)]
+    #[instrument(level = "trace")]
     pub fn set_voltage_protocol_ramp(
         &self,
         item_idx: u16,
@@ -99,6 +104,7 @@ impl Device {
 
     /// Wraps `e384_setVoltageProtocolSin`.
     #[allow(clippy::too_many_arguments)]
+    #[instrument(level = "trace")]
     pub fn set_voltage_protocol_sin(
         &self,
         item_idx: u16,
@@ -135,6 +141,7 @@ impl Device {
     }
 
     /// Wraps `e384_setCurrentProtocolStructure`.
+    #[instrument(level = "trace")]
     pub fn set_current_protocol_structure(
         &self,
         prot_id: u16,
@@ -157,6 +164,7 @@ impl Device {
 
     /// Wraps `e384_setCurrentProtocolStep`.
     #[allow(clippy::too_many_arguments)]
+    #[instrument(level = "trace")]
     pub fn set_current_protocol_step(
         &self,
         item_idx: u16,
@@ -190,6 +198,7 @@ impl Device {
 
     /// Wraps `e384_setCurrentProtocolRamp`.
     #[allow(clippy::too_many_arguments)]
+    #[instrument(level = "trace")]
     pub fn set_current_protocol_ramp(
         &self,
         item_idx: u16,
@@ -227,6 +236,7 @@ impl Device {
 
     /// Wraps `e384_setCurrentProtocolSin`.
     #[allow(clippy::too_many_arguments)]
+    #[instrument(level = "trace")]
     pub fn set_current_protocol_sin(
         &self,
         item_idx: u16,
@@ -263,6 +273,7 @@ impl Device {
     }
 
     /// Wraps `e384_getVoltageProtocolRangeFeature`.
+    #[instrument(level = "trace")]
     pub fn voltage_protocol_range_feature(
         &self,
         range_idx: u16,
@@ -277,6 +288,7 @@ impl Device {
     }
 
     /// Wraps `e384_getCurrentProtocolRangeFeature`.
+    #[instrument(level = "trace")]
     pub fn current_protocol_range_feature(
         &self,
         range_idx: u16,
@@ -291,6 +303,7 @@ impl Device {
     }
 
     /// Wraps `e384_getVoltageRampTunerFeatures`: voltage ranges plus the shared duration range.
+    #[instrument(level = "trace")]
     pub fn voltage_ramp_tuner_features(
         &self,
     ) -> Result<(Vec<E384RangedMeasurement>, E384RangedMeasurement), ErrorCodes> {
@@ -305,21 +318,25 @@ impl Device {
     }
 
     /// Wraps `e384_sendCommands`.
+    #[instrument(level = "trace")]
     pub fn send_commands(&self) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_sendCommands(self.0)) }
     }
 
     /// Wraps `e384_startProtocol`.
+    #[instrument(level = "trace")]
     pub fn start_protocol(&self) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_startProtocol(self.0)) }
     }
 
     /// Wraps `e384_stopProtocol`.
+    #[instrument(level = "trace")]
     pub fn stop_protocol(&self) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_stopProtocol(self.0)) }
     }
 
     /// Wraps `e384_startStateArray`.
+    #[instrument(level = "trace")]
     pub fn start_state_array(&self) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_startStateArray(self.0)) }
     }

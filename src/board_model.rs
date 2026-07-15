@@ -8,6 +8,8 @@
 
 use std::marker::PhantomData;
 
+use tracing::instrument;
+
 use crate::channel_model::{Channel, wrap_channels};
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
@@ -17,6 +19,7 @@ use crate::util::collect_list;
 /// A board handle borrowed from a connected `Device`'s internal model.
 /// There is no `e384_boardModel_free` — valid only while the originating
 /// `Device` stays connected, enforced here via the lifetime parameter.
+#[derive(Debug)]
 pub struct Board<'d> {
     pub(crate) ptr: *mut E384BoardModel,
     pub(crate) _device: PhantomData<&'d Device>,
@@ -24,36 +27,43 @@ pub struct Board<'d> {
 
 impl<'d> Board<'d> {
     /// Wraps `e384_boardModel_getId`.
+    #[instrument(level = "trace")]
     pub fn id(&self) -> u16 {
         unsafe { crate::sys::e384_boardModel_getId(self.ptr) }
     }
 
     /// Wraps `e384_boardModel_setId`.
+    #[instrument(level = "trace")]
     pub fn set_id(&mut self, id: u16) {
         unsafe { crate::sys::e384_boardModel_setId(self.ptr, id) };
     }
 
     /// Wraps `e384_boardModel_getGateVoltage`.
+    #[instrument(level = "trace")]
     pub fn gate_voltage(&self) -> E384Measurement {
         unsafe { crate::sys::e384_boardModel_getGateVoltage(self.ptr) }
     }
 
     /// Wraps `e384_boardModel_setGateVoltage`.
+    #[instrument(level = "trace")]
     pub fn set_gate_voltage(&mut self, voltage: E384Measurement) {
         unsafe { crate::sys::e384_boardModel_setGateVoltage(self.ptr, voltage) };
     }
 
     /// Wraps `e384_boardModel_getSourceVoltage`.
+    #[instrument(level = "trace")]
     pub fn source_voltage(&self) -> E384Measurement {
         unsafe { crate::sys::e384_boardModel_getSourceVoltage(self.ptr) }
     }
 
     /// Wraps `e384_boardModel_setSourceVoltage`.
+    #[instrument(level = "trace")]
     pub fn set_source_voltage(&mut self, voltage: E384Measurement) {
         unsafe { crate::sys::e384_boardModel_setSourceVoltage(self.ptr, voltage) };
     }
 
     /// Wraps `e384_boardModel_getChannelsOnBoard`.
+    #[instrument(level = "trace")]
     pub fn channels_on_board(&self) -> Result<Vec<Channel<'d>>, ErrorCodes> {
         let ptr = self.ptr;
         let ptrs = unsafe {
@@ -67,6 +77,7 @@ impl<'d> Board<'d> {
 
 impl Device {
     /// Wraps `e384_getBoards`.
+    #[instrument(level = "trace")]
     pub fn boards(&self) -> Result<Vec<Board<'_>>, ErrorCodes> {
         let dev = self.0;
         let ptrs =

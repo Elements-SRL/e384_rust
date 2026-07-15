@@ -1,6 +1,8 @@
 //! Raw ADC sample (`i16`) to physical value (`f64`) conversion, and the disambiguated
 //! per-channel overloads of the single-value converters.
 
+use tracing::instrument;
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::util::translate;
@@ -8,6 +10,7 @@ use crate::util::translate;
 impl Device {
     /// Wraps `e384_convertVoltageValues`. Out-of-place: `flt_values` must be the same length as
     /// `int_values`.
+    #[instrument(level = "trace")]
     pub fn convert_voltage_values(
         &self,
         int_values: &mut [i16],
@@ -25,6 +28,7 @@ impl Device {
     }
 
     /// Wraps `e384_convertCurrentValues`. `int_values`/`flt_values` must be equal length.
+    #[instrument(level = "trace")]
     pub fn convert_current_values(
         &self,
         int_values: &mut [i16],
@@ -43,6 +47,7 @@ impl Device {
 
     /// Wraps `e384_convertTemperatureValues`. `int_values`/`flt_values` must be sized to the
     /// device's temperature channel count.
+    #[instrument(level = "trace")]
     pub fn convert_temperature_values(
         &self,
         int_values: &mut [i16],
@@ -58,6 +63,7 @@ impl Device {
     }
 
     /// Wraps `e384_convertOnTimeValue`.
+    #[instrument(level = "trace")]
     pub fn convert_on_time_value(&self, int_values: &mut [i16; 2]) -> Result<f64, ErrorCodes> {
         let mut flt_value = 0.0;
         unsafe {
@@ -71,6 +77,7 @@ impl Device {
     }
 
     /// Wraps `e384_convertVoltageValue`.
+    #[instrument(level = "trace")]
     pub fn convert_voltage_value(&self, int_value: i16) -> Result<f64, ErrorCodes> {
         let mut out = 0.0;
         unsafe {
@@ -82,6 +89,7 @@ impl Device {
     }
 
     /// Wraps `e384_convertVoltageValue_byChannel`.
+    #[instrument(level = "trace")]
     pub fn convert_voltage_value_by_channel(
         &self,
         int_value: i16,
@@ -100,6 +108,7 @@ impl Device {
     }
 
     /// Wraps `e384_convertCurrentValue`.
+    #[instrument(level = "trace")]
     pub fn convert_current_value(&self, int_value: i16) -> Result<f64, ErrorCodes> {
         let mut out = 0.0;
         unsafe {
@@ -111,6 +120,7 @@ impl Device {
     }
 
     /// Wraps `e384_convertCurrentValue_byChannel`.
+    #[instrument(level = "trace")]
     pub fn convert_current_value_by_channel(
         &self,
         int_value: i16,

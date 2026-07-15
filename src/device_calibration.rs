@@ -1,12 +1,15 @@
 //! Calibration EEPROM read/write, calibration file names/flags, and the OK-board calibration
 //! RAM functions (`e384_ok*`).
 
+use tracing::instrument;
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::util::{collect_matrix, owned_string_list, translate};
 
 impl Device {
     /// Wraps `e384_writeCalibrationEeprom`. `value`/`address`/`size` must be equal length.
+    #[instrument(level = "trace")]
     pub fn write_calibration_eeprom(
         &self,
         value: &[u32],
@@ -27,6 +30,7 @@ impl Device {
     }
 
     /// Wraps `e384_readCalibrationEeprom`. `address`/`size` must be equal length.
+    #[instrument(level = "trace")]
     pub fn read_calibration_eeprom(
         &self,
         address: &[u32],
@@ -47,6 +51,7 @@ impl Device {
     }
 
     /// Wraps `e384_getCalibFileNames`.
+    #[instrument(level = "trace")]
     pub fn calib_file_names(&self) -> Result<Vec<String>, ErrorCodes> {
         let mut list = std::ptr::null_mut();
         unsafe { translate(crate::sys::e384_getCalibFileNames(self.0, &mut list)) }?;
@@ -54,6 +59,7 @@ impl Device {
     }
 
     /// Wraps `e384_getCalibFilesFlags`. Row-major flags matrix, one row per calibration file.
+    #[instrument(level = "trace")]
     pub fn calib_files_flags(&self) -> Result<(Vec<u8>, usize, usize), ErrorCodes> {
         let dev = self.0;
         unsafe {
@@ -64,21 +70,25 @@ impl Device {
     }
 
     /// Wraps `e384_okMoveCalibrationEepromToRams`.
+    #[instrument(level = "trace")]
     pub fn ok_move_calibration_eeprom_to_rams(&self) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_okMoveCalibrationEepromToRams(self.0)) }
     }
 
     /// Wraps `e384_okMoveCalibrationRamsToEeprom`.
+    #[instrument(level = "trace")]
     pub fn ok_move_calibration_rams_to_eeprom(&self) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_okMoveCalibrationRamsToEeprom(self.0)) }
     }
 
     /// Wraps `e384_okSelectCalibrationRam`.
+    #[instrument(level = "trace")]
     pub fn ok_select_calibration_ram(&self, ram_idx: u16) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_okSelectCalibrationRam(self.0, ram_idx)) }
     }
 
     /// Wraps `e384_okWriteCalibrationRam`.
+    #[instrument(level = "trace")]
     pub fn ok_write_calibration_ram(&self, address: u16, value: u8) -> Result<(), ErrorCodes> {
         unsafe {
             translate(crate::sys::e384_okWriteCalibrationRam(
@@ -88,6 +98,7 @@ impl Device {
     }
 
     /// Wraps `e384_okReadCalibrationRam`.
+    #[instrument(level = "trace")]
     pub fn ok_read_calibration_ram(&self) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_okReadCalibrationRam(self.0)) }
     }

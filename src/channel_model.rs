@@ -5,6 +5,8 @@
 
 use std::marker::PhantomData;
 
+use tracing::instrument;
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::sys::{E384ChannelModel, E384Measurement};
@@ -14,6 +16,7 @@ use crate::util::collect_list;
 /// There is no `e384_channelModel_free` — the pointer is only valid for as
 /// long as the `Device` it came from stays connected, which the lifetime
 /// parameter enforces at compile time.
+#[derive(Debug)]
 pub struct Channel<'d> {
     pub(crate) ptr: *mut E384ChannelModel,
     pub(crate) _device: PhantomData<&'d Device>,
@@ -21,31 +24,37 @@ pub struct Channel<'d> {
 
 impl Channel<'_> {
     /// Wraps `e384_channelModel_getId`.
+    #[instrument(level = "trace")]
     pub fn id(&self) -> u16 {
         unsafe { crate::sys::e384_channelModel_getId(self.ptr) }
     }
 
     /// Wraps `e384_channelModel_setId`.
+    #[instrument(level = "trace")]
     pub fn set_id(&mut self, id: u16) {
         unsafe { crate::sys::e384_channelModel_setId(self.ptr, id) };
     }
 
     /// Wraps `e384_channelModel_isOn`.
+    #[instrument(level = "trace")]
     pub fn is_on(&self) -> bool {
         unsafe { crate::sys::e384_channelModel_isOn(self.ptr) != 0 }
     }
 
     /// Wraps `e384_channelModel_setOn`.
+    #[instrument(level = "trace")]
     pub fn set_on(&mut self, on: bool) {
         unsafe { crate::sys::e384_channelModel_setOn(self.ptr, on as i32) };
     }
 
     /// Wraps `e384_channelModel_isRecalibratingReadoutOffset`.
+    #[instrument(level = "trace")]
     pub fn is_recalibrating_readout_offset(&self) -> bool {
         unsafe { crate::sys::e384_channelModel_isRecalibratingReadoutOffset(self.ptr) != 0 }
     }
 
     /// Wraps `e384_channelModel_setRecalibratingReadoutOffset`.
+    #[instrument(level = "trace")]
     pub fn set_recalibrating_readout_offset(&mut self, recalibrating: bool) {
         unsafe {
             crate::sys::e384_channelModel_setRecalibratingReadoutOffset(
@@ -56,11 +65,13 @@ impl Channel<'_> {
     }
 
     /// Wraps `e384_channelModel_isCompensatingLiquidJunction`.
+    #[instrument(level = "trace")]
     pub fn is_compensating_liquid_junction(&self) -> bool {
         unsafe { crate::sys::e384_channelModel_isCompensatingLiquidJunction(self.ptr) != 0 }
     }
 
     /// Wraps `e384_channelModel_setCompensatingLiquidJunction`.
+    #[instrument(level = "trace")]
     pub fn set_compensating_liquid_junction(&mut self, compensating: bool) {
         unsafe {
             crate::sys::e384_channelModel_setCompensatingLiquidJunction(
@@ -71,11 +82,13 @@ impl Channel<'_> {
     }
 
     /// Wraps `e384_channelModel_isCompensatingCfast`.
+    #[instrument(level = "trace")]
     pub fn is_compensating_cfast(&self) -> bool {
         unsafe { crate::sys::e384_channelModel_isCompensatingCfast(self.ptr) != 0 }
     }
 
     /// Wraps `e384_channelModel_setCompensatingCfast`.
+    #[instrument(level = "trace")]
     pub fn set_compensating_cfast(&mut self, compensating: bool) {
         unsafe {
             crate::sys::e384_channelModel_setCompensatingCfast(self.ptr, compensating as i32)
@@ -83,11 +96,13 @@ impl Channel<'_> {
     }
 
     /// Wraps `e384_channelModel_isCompensatingCslowRs`.
+    #[instrument(level = "trace")]
     pub fn is_compensating_cslow_rs(&self) -> bool {
         unsafe { crate::sys::e384_channelModel_isCompensatingCslowRs(self.ptr) != 0 }
     }
 
     /// Wraps `e384_channelModel_setCompensatingCslowRs`.
+    #[instrument(level = "trace")]
     pub fn set_compensating_cslow_rs(&mut self, compensating: bool) {
         unsafe {
             crate::sys::e384_channelModel_setCompensatingCslowRs(self.ptr, compensating as i32)
@@ -95,27 +110,32 @@ impl Channel<'_> {
     }
 
     /// Wraps `e384_channelModel_isCompensatingRsCp`.
+    #[instrument(level = "trace")]
     pub fn is_compensating_rs_cp(&self) -> bool {
         unsafe { crate::sys::e384_channelModel_isCompensatingRsCp(self.ptr) != 0 }
     }
 
     /// Wraps `e384_channelModel_setCompensatingRsCp`.
+    #[instrument(level = "trace")]
     pub fn set_compensating_rs_cp(&mut self, compensating: bool) {
         unsafe { crate::sys::e384_channelModel_setCompensatingRsCp(self.ptr, compensating as i32) };
     }
 
     /// Wraps `e384_channelModel_isCompensatingRsPg`.
+    #[instrument(level = "trace")]
     pub fn is_compensating_rs_pg(&self) -> bool {
         unsafe { crate::sys::e384_channelModel_isCompensatingRsPg(self.ptr) != 0 }
     }
 
     /// Wraps `e384_channelModel_setCompensatingRsPg`.
+    #[instrument(level = "trace")]
     pub fn set_compensating_rs_pg(&mut self, compensating: bool) {
         unsafe { crate::sys::e384_channelModel_setCompensatingRsPg(self.ptr, compensating as i32) };
     }
 
     /// Wraps `e384_channelModel_setCompensatingCcCfast`. No matching
     /// `is_compensating_cc_cfast` getter exists in the C API.
+    #[instrument(level = "trace")]
     pub fn set_compensating_cc_cfast(&mut self, compensating: bool) {
         unsafe {
             crate::sys::e384_channelModel_setCompensatingCcCfast(self.ptr, compensating as i32)
@@ -123,61 +143,73 @@ impl Channel<'_> {
     }
 
     /// Wraps `e384_channelModel_isStimActive`.
+    #[instrument(level = "trace")]
     pub fn is_stim_active(&self) -> bool {
         unsafe { crate::sys::e384_channelModel_isStimActive(self.ptr) != 0 }
     }
 
     /// Wraps `e384_channelModel_setStimActive`.
+    #[instrument(level = "trace")]
     pub fn set_stim_active(&mut self, active: bool) {
         unsafe { crate::sys::e384_channelModel_setStimActive(self.ptr, active as i32) };
     }
 
     /// Wraps `e384_channelModel_getVhold`.
+    #[instrument(level = "trace")]
     pub fn vhold(&self) -> E384Measurement {
         unsafe { crate::sys::e384_channelModel_getVhold(self.ptr) }
     }
 
     /// Wraps `e384_channelModel_setVhold`.
+    #[instrument(level = "trace")]
     pub fn set_vhold(&mut self, vhold: E384Measurement) {
         unsafe { crate::sys::e384_channelModel_setVhold(self.ptr, vhold) };
     }
 
     /// Wraps `e384_channelModel_getChold`.
+    #[instrument(level = "trace")]
     pub fn chold(&self) -> E384Measurement {
         unsafe { crate::sys::e384_channelModel_getChold(self.ptr) }
     }
 
     /// Wraps `e384_channelModel_setChold`.
+    #[instrument(level = "trace")]
     pub fn set_chold(&mut self, chold: E384Measurement) {
         unsafe { crate::sys::e384_channelModel_setChold(self.ptr, chold) };
     }
 
     /// Wraps `e384_channelModel_getVhalf`.
+    #[instrument(level = "trace")]
     pub fn vhalf(&self) -> E384Measurement {
         unsafe { crate::sys::e384_channelModel_getVhalf(self.ptr) }
     }
 
     /// Wraps `e384_channelModel_setVhalf`.
+    #[instrument(level = "trace")]
     pub fn set_vhalf(&mut self, vhalf: E384Measurement) {
         unsafe { crate::sys::e384_channelModel_setVhalf(self.ptr, vhalf) };
     }
 
     /// Wraps `e384_channelModel_getChalf`.
+    #[instrument(level = "trace")]
     pub fn chalf(&self) -> E384Measurement {
         unsafe { crate::sys::e384_channelModel_getChalf(self.ptr) }
     }
 
     /// Wraps `e384_channelModel_setChalf`.
+    #[instrument(level = "trace")]
     pub fn set_chalf(&mut self, chalf: E384Measurement) {
         unsafe { crate::sys::e384_channelModel_setChalf(self.ptr, chalf) };
     }
 
     /// Wraps `e384_channelModel_getLiquidJunctionVoltage`.
+    #[instrument(level = "trace")]
     pub fn liquid_junction_voltage(&self) -> E384Measurement {
         unsafe { crate::sys::e384_channelModel_getLiquidJunctionVoltage(self.ptr) }
     }
 
     /// Wraps `e384_channelModel_setLiquidJunctionVoltage`.
+    #[instrument(level = "trace")]
     pub fn set_liquid_junction_voltage(&mut self, voltage: E384Measurement) {
         unsafe { crate::sys::e384_channelModel_setLiquidJunctionVoltage(self.ptr, voltage) };
     }
@@ -194,6 +226,7 @@ pub(crate) fn wrap_channels(ptrs: Vec<*mut E384ChannelModel>) -> Vec<Channel<'st
 
 impl Device {
     /// Wraps `e384_getChannels`.
+    #[instrument(level = "trace")]
     pub fn channels(&self) -> Result<Vec<Channel<'_>>, ErrorCodes> {
         let dev = self.0;
         let ptrs =
@@ -202,6 +235,7 @@ impl Device {
     }
 
     /// Wraps `e384_getChannelsOnBoard`.
+    #[instrument(level = "trace")]
     pub fn channels_on_board(&self, board_idx: u16) -> Result<Vec<Channel<'_>>, ErrorCodes> {
         let dev = self.0;
         let ptrs = unsafe {
@@ -213,6 +247,7 @@ impl Device {
     }
 
     /// Wraps `e384_getChannelsOnRow`.
+    #[instrument(level = "trace")]
     pub fn channels_on_row(&self, row_idx: u16) -> Result<Vec<Channel<'_>>, ErrorCodes> {
         let dev = self.0;
         let ptrs = unsafe {

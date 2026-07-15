@@ -4,6 +4,8 @@
 
 use std::marker::PhantomData;
 
+use tracing::instrument;
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::sys::{E384Device, E384RxOutput};
@@ -12,6 +14,7 @@ use crate::util::translate;
 /// Library-allocated RX data buffer, sized via `e384_getRxDataBufferSize` and
 /// reused across repeated `e384_getNextMessage` calls. Tied to the `Device`
 /// it was allocated from; `Drop` releases it via `e384_deallocateRxDataBuffer`.
+#[derive(Debug)]
 pub struct RxBuffer<'d> {
     dev: *mut E384Device,
     data: *mut i16,
@@ -32,6 +35,7 @@ impl RxBuffer<'_> {
 
     /// Wraps `e384_getNextMessage`. The returned slice borrows this buffer and is only valid
     /// until the next call to `next_message`.
+    #[instrument(level = "trace")]
     pub fn next_message(&mut self, msg_type: i32) -> Result<(E384RxOutput, &[i16]), ErrorCodes> {
         let mut rx_out = E384RxOutput::default();
         unsafe {
@@ -57,6 +61,7 @@ impl Drop for RxBuffer<'_> {
 
 impl Device {
     /// Wraps `e384_getRxDataBufferSize` + `e384_allocateRxDataBuffer`.
+    #[instrument(level = "trace")]
     pub fn allocate_rx_buffer(&self) -> Result<RxBuffer<'_>, ErrorCodes> {
         let mut size: u32 = 0;
         unsafe { translate(crate::sys::e384_getRxDataBufferSize(self.0, &mut size)) }?;
@@ -73,6 +78,7 @@ impl Device {
     }
 
     /// Wraps `e384_purgeData`.
+    #[instrument(level = "trace")]
     pub fn purge_data(&self) -> Result<(), ErrorCodes> {
         unsafe { translate(crate::sys::e384_purgeData(self.0)) }
     }

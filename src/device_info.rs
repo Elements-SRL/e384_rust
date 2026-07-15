@@ -5,6 +5,8 @@
 
 use std::ffi::CString;
 
+use tracing::instrument;
+
 use crate::device::Device;
 use crate::error_codes::ErrorCodes;
 use crate::util::{owned_string, translate};
@@ -20,6 +22,7 @@ pub struct DeviceVersionInfo {
 
 /// Wraps `e384_getDeviceInfoForId`. Static query, callable before connecting: takes a raw device
 /// id string (as returned by `Device::list_devices`) rather than a live handle.
+#[instrument(level = "trace")]
 pub fn device_info_for_id(device_id: &str) -> Result<DeviceVersionInfo, ErrorCodes> {
     let Ok(c_id) = CString::new(device_id) else {
         return Err(ErrorCodes::ErrorDeviceNotFound);
@@ -48,6 +51,7 @@ pub fn device_info_for_id(device_id: &str) -> Result<DeviceVersionInfo, ErrorCod
 macro_rules! probe {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self) -> Result<bool, ErrorCodes> {
             let mut out: i32 = 0;
             unsafe { translate($sys_fn(self.0, &mut out)) }?;
@@ -60,6 +64,7 @@ macro_rules! probe {
 macro_rules! string_getter {
     ($doc:literal, $name:ident, $sys_fn:path) => {
         #[doc = $doc]
+        #[instrument(level = "trace")]
         pub fn $name(&self) -> Result<String, ErrorCodes> {
             let mut raw = std::ptr::null_mut();
             unsafe { translate($sys_fn(self.0, &mut raw)) }?;
@@ -70,6 +75,7 @@ macro_rules! string_getter {
 
 impl Device {
     /// Wraps `e384_getDeviceInfo`.
+    #[instrument(level = "trace")]
     pub fn device_info(&self) -> Result<DeviceVersionInfo, ErrorCodes> {
         let mut info = DeviceVersionInfo {
             device_version: 0,
@@ -92,6 +98,7 @@ impl Device {
     }
 
     /// Wraps `e384_getChannelNumberFeatures_u16`.
+    #[instrument(level = "trace")]
     pub fn channel_number_features_u16(&self) -> Result<(u16, u16), ErrorCodes> {
         let mut voltage: u16 = 0;
         let mut current: u16 = 0;
@@ -106,6 +113,7 @@ impl Device {
     }
 
     /// Wraps `e384_getChannelNumberFeatures_int`.
+    #[instrument(level = "trace")]
     pub fn channel_number_features_int(&self) -> Result<(i32, i32), ErrorCodes> {
         let mut voltage: i32 = 0;
         let mut current: i32 = 0;
@@ -120,6 +128,7 @@ impl Device {
     }
 
     /// Wraps `e384_getChannelNumberFeatures_intGp`.
+    #[instrument(level = "trace")]
     pub fn channel_number_features_int_gp(&self) -> Result<(i32, i32, i32), ErrorCodes> {
         let mut voltage: i32 = 0;
         let mut current: i32 = 0;
@@ -136,6 +145,7 @@ impl Device {
     }
 
     /// Wraps `e384_getBoardsNumberFeatures_u16`.
+    #[instrument(level = "trace")]
     pub fn boards_number_features_u16(&self) -> Result<u16, ErrorCodes> {
         let mut out: u16 = 0;
         unsafe {
@@ -147,6 +157,7 @@ impl Device {
     }
 
     /// Wraps `e384_getBoardsNumberFeatures_int`.
+    #[instrument(level = "trace")]
     pub fn boards_number_features_int(&self) -> Result<i32, ErrorCodes> {
         let mut out: i32 = 0;
         unsafe {

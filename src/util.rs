@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Converts a raw `E384Err` into a `Result`, via [`ErrorCodes::from`] + [`ErrorCodes::to_res`].
-#[instrument]
+#[instrument(level = "trace")]
 pub fn translate(err: E384Err) -> Result<(), ErrorCodes> {
     let e: ErrorCodes = err.into();
     e.to_res()

@@ -15,12 +15,12 @@ use std::time::Duration;
 use e384_rust::device::Device;
 use e384_rust::error_codes::ErrorCodes;
 use e384_rust::sys::{
-    E384Measurement, E384RangedMeasurement, E384UnitPfx_E384_PFX_FEMTO,
-    E384UnitPfx_E384_PFX_GIGA, E384UnitPfx_E384_PFX_KILO, E384UnitPfx_E384_PFX_MEGA,
-    E384UnitPfx_E384_PFX_MICRO, E384UnitPfx_E384_PFX_MILLI, E384UnitPfx_E384_PFX_NANO,
-    E384UnitPfx_E384_PFX_NONE, E384UnitPfx_E384_PFX_PETA, E384UnitPfx_E384_PFX_PICO,
-    E384UnitPfx_E384_PFX_TERA, E384Unit_E384_UNIT_A, E384Unit_E384_UNIT_C, E384Unit_E384_UNIT_HZ,
-    E384Unit_E384_UNIT_NONE, E384Unit_E384_UNIT_S, E384Unit_E384_UNIT_V,
+    E384Measurement, E384RangedMeasurement, E384Unit_E384_UNIT_A, E384Unit_E384_UNIT_C,
+    E384Unit_E384_UNIT_HZ, E384Unit_E384_UNIT_NONE, E384Unit_E384_UNIT_S, E384Unit_E384_UNIT_V,
+    E384UnitPfx_E384_PFX_FEMTO, E384UnitPfx_E384_PFX_GIGA, E384UnitPfx_E384_PFX_KILO,
+    E384UnitPfx_E384_PFX_MEGA, E384UnitPfx_E384_PFX_MICRO, E384UnitPfx_E384_PFX_MILLI,
+    E384UnitPfx_E384_PFX_NANO, E384UnitPfx_E384_PFX_NONE, E384UnitPfx_E384_PFX_PETA,
+    E384UnitPfx_E384_PFX_PICO, E384UnitPfx_E384_PFX_TERA,
 };
 
 fn prefix_multiplier(prefix: i32) -> f64 {
@@ -161,13 +161,13 @@ fn main() -> Result<(), ErrorCodes> {
     let target_samples = (10.0 * no_prefix_value(sampling_rate)) as u32;
     while acc_data_to_read <= target_samples {
         // Read packets. This has to be done for the digital offset compensation to work.
-        match  wait_buffer.next_message(-1) {
+        match wait_buffer.next_message(-1) {
             Ok((rx_out, _data)) => {
                 if rx_out.dataLen > 0 {
                     acc_data_to_read +=
                         rx_out.dataLen / (voltage_channels_num + current_channels_num) as u32;
                 }
-            },
+            }
             Err(ErrorCodes::ErrorNoDataAvailable) => thread::sleep(Duration::from_millis(5)),
             Err(e) => {
                 println!("{:?}", e);
@@ -237,7 +237,16 @@ fn main() -> Result<(), ErrorCodes> {
         unit: E384Unit_E384_UNIT_V,
     };
     device.set_voltage_protocol_step(
-        0, 1, reps_num, apply_steps, v0, v_step, t0, t_step, v_half_flag, &[],
+        0,
+        1,
+        reps_num,
+        apply_steps,
+        v0,
+        v_step,
+        t0,
+        t_step,
+        v_half_flag,
+        &[],
     )?;
 
     let v0 = E384Measurement {
@@ -246,7 +255,16 @@ fn main() -> Result<(), ErrorCodes> {
         unit: E384Unit_E384_UNIT_V,
     };
     device.set_voltage_protocol_step(
-        1, 2, reps_num, apply_steps, v0, v_step, t0, t_step, v_half_flag, &[],
+        1,
+        2,
+        reps_num,
+        apply_steps,
+        v0,
+        v_step,
+        t0,
+        t_step,
+        v_half_flag,
+        &[],
     )?;
 
     let v0 = E384Measurement {
@@ -255,7 +273,16 @@ fn main() -> Result<(), ErrorCodes> {
         unit: E384Unit_E384_UNIT_V,
     };
     device.set_voltage_protocol_step(
-        2, 0, reps_num, apply_steps, v0, v_step, t0, t_step, v_half_flag, &[],
+        2,
+        0,
+        reps_num,
+        apply_steps,
+        v0,
+        v_step,
+        t0,
+        t_step,
+        v_half_flag,
+        &[],
     )?;
 
     device.start_protocol()?;
@@ -286,14 +313,14 @@ fn main() -> Result<(), ErrorCodes> {
         }
 
         // Read packets.
-        match  buffer.next_message(-1) {
+        match buffer.next_message(-1) {
             Ok((rx_out, data)) => {
                 if rx_out.dataLen > 0 {
                     acc_data_to_read +=
                         rx_out.dataLen / (voltage_channels_num + current_channels_num) as u32;
                     write_samples(&mut fid, data).expect("failed to write to myLog.dat");
                 }
-            },
+            }
             Err(ErrorCodes::ErrorNoDataAvailable) => thread::sleep(Duration::from_millis(5)),
             Err(e) => {
                 println!("{:?}", e);
