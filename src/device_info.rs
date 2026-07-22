@@ -12,6 +12,7 @@ use crate::error_codes::ErrorCodes;
 use crate::util::{owned_string, translate};
 
 /// Device version/firmware info returned by [`device_info_for_id`] and [`Device::device_info`].
+#[derive(Debug)]
 pub struct DeviceVersionInfo {
     pub device_version: u32,
     pub device_sub_version: u32,
